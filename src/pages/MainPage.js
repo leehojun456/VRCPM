@@ -1,5 +1,7 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import FolderPicture from "../components/FolderPicture.js";
+import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
+import {faArrowsRotate} from "@fortawesome/free-solid-svg-icons";
 
 
 const MainPage = () => {
@@ -11,6 +13,11 @@ const MainPage = () => {
     const observerTarget = useRef(null);
 
     useEffect(() => {
+        handleRequest();
+    }, []);
+
+    const handleRequest = ()=> {
+        setDisplayedItems([]);
         window.folderList.request();
 
         window.folderList.onReceiveList((list) => {
@@ -19,8 +26,7 @@ const MainPage = () => {
             setDisplayedItems(sortedList.slice(0, pageSize));
             setCurrentIndex(pageSize);
         });
-    }, [pageSize]);
-
+    }
     const loadMore = useCallback(() => {
         if (currentIndex >= folderList.length) return;
 
@@ -48,17 +54,17 @@ const MainPage = () => {
 
     return (
         <div className="flex flex-col gap-2 divide-y divide-solid w-full">
-            <div className="flex gap-2">
+            <div className="flex gap-2 h-10">
                 <input
-                    className="border rounded-md w-full h-10 px-3"
+                    className="border rounded-md w-full px-3 h-full"
                     placeholder="검색"
                 />
                 <select className="w-24"></select>
                 <button
                     className="px-4 py-2 bg-blue-500 text-white rounded-md"
-                    onClick={() => window.folderList.request()}
+                    onClick={() => handleRequest()}
                 >
-                    새로고침
+                    <FontAwesomeIcon icon={faArrowsRotate} />
                 </button>
             </div>
 
