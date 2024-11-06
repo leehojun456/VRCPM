@@ -17,5 +17,8 @@ contextBridge.exposeInMainWorld('PictureList', {
         const channel = `pictureList-${timestamp}`;
         const listener = (event, list) => callback(list);
         ipcRenderer.on(channel, listener);
+
+        // Return a function to remove the listener
+        return () => ipcRenderer.removeListener(channel, listener);
     },
 });

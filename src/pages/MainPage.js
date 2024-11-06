@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import FolderPicture from "../components/FolderPicture.js";
 
+
 const MainPage = () => {
     const [folderList, setFolderList] = useState([]);
     const [displayedItems, setDisplayedItems] = useState([]);

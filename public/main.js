@@ -4,6 +4,7 @@ import * as isDev from 'electron-is-dev'
 import { Worker } from 'worker_threads';
 import { fileURLToPath } from 'url';
 import * as fs from "node:fs";
+import sharp from "sharp";
 // 현재 파일의 경로
 const __filename = fileURLToPath(import.meta.url);
 // 현재 파일의 디렉토리 경로
@@ -48,6 +49,11 @@ app.on('window-all-closed', () => {
         app.quit();
     }
 });
+app.commandLine.appendSwitch('enable-gpu-rasterization');
+app.commandLine.appendSwitch('enable-zero-copy');
+app.commandLine.appendSwitch('disable-software-rasterizer');
+app.commandLine.appendSwitch('force-gpu-rasterization');
+app.commandLine.appendSwitch('enabled_force');
 
 app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
@@ -83,12 +89,12 @@ ipcMain.on('folderList', (event) => {
 
 
 // 'pictureList' 요청을 받았을 때 폴더 리스트 전송
-ipcMain.on('pictureList', (event, timestamp) => {
+ipcMain.on('pictureList',  (event, timestamp) => {
 
     console.log(timestamp)
 
     const picturesPath = app.getPath('pictures') + "/VRChat/" + timestamp;
-    fs.readdir(picturesPath, (err, files) => {
+    fs.readdir(picturesPath, async (err, files) => {
         if (err) {
             console.error('Error reading directory:', err);
             event.reply('folderList', { error: 'Failed to read directory' });
@@ -96,11 +102,32 @@ ipcMain.on('pictureList', (event, timestamp) => {
         }
 
         // 디렉토리 내 파일 중 이미지 파일만 가져오기 (예: .jpg, .png 확장자)
-        const pictureList = files
+        const imageFiles = files
             .filter(file => /\.(jpg|jpeg|png|gif)$/i.test(file)).map(file => path.join(picturesPath, file));
 
+        const sentImages = new Set();
 
-        // 사진 리스트를 Renderer로 전송
-        event.reply(`pictureList-${timestamp}`, pictureList);
+        for (const file of imageFiles) {
+            if (sentImages.has(file)) {
+                continue; // 이미 전송된 이미지면 건너뜀
+            }
+            try {
+                // Read and process the image with Sharp
+                const buffer = await sharp(file)
+                    .resize({ width: 800 }) // Resize to width of 800px, adjust as needed
+                    .jpeg({ quality: 80 }) // Convert to JPEG and set quality
+                    .toBuffer();
+
+                // Convert the buffer to Base64
+                 const base64Image = buffer.toString('base64');
+                // Store Base64 data in the array
+                //pictureList.push(`data:image/jpeg;base64,${base64Image}`);
+
+                await event.reply(`pictureList-${timestamp}`, `data:image/jpeg;base64,${base64Image}`);
+
+            } catch (imageErr) {
+                console.error('Error processing image:', imageErr);
+            }
+        }
     });
 });
