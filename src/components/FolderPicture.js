@@ -30,7 +30,7 @@ const FolderPicture = ({ timestamp }) => {
                 {pictureList.map((list) => (
                     <div className={"flex items-center justify-center rounded-md overflow-hidden"}>
                         <img
-                            src={list} className={"w-full h-full object-cover"} />
+                            src={list.preview} className={"w-full h-full object-cover"} />
                     </div>
                 ))}
             </div>

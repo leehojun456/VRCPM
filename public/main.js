@@ -105,12 +105,9 @@ ipcMain.on('pictureList',  (event, timestamp) => {
         const imageFiles = files
             .filter(file => /\.(jpg|jpeg|png|gif)$/i.test(file)).map(file => path.join(picturesPath, file));
 
-        const sentImages = new Set();
+
 
         for (const file of imageFiles) {
-            if (sentImages.has(file)) {
-                continue; // 이미 전송된 이미지면 건너뜀
-            }
             try {
                 // Read and process the image with Sharp
                 const buffer = await sharp(file)
@@ -123,7 +120,10 @@ ipcMain.on('pictureList',  (event, timestamp) => {
                 // Store Base64 data in the array
                 //pictureList.push(`data:image/jpeg;base64,${base64Image}`);
 
-                await event.reply(`pictureList-${timestamp}`, `data:image/jpeg;base64,${base64Image}`);
+                await event.reply(`pictureList-${timestamp}`, {
+                    preview:`data:image/jpeg;base64,${base64Image}`,
+                    image: file,
+                });
 
             } catch (imageErr) {
                 console.error('Error processing image:', imageErr);
