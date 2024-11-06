@@ -1,7 +1,11 @@
 import React, {useEffect, useState} from 'react';
+import ModelNode from "three/src/nodes/accessors/ModelNode.js";
+import DetailPictureModal from "./DetailPictureModal.js";
 
 const FolderPicture = ({ timestamp }) => {
     const [pictureList, setPictureList] = useState([])
+    const [selectedImage, setSelectedImage] = useState(null);
+    const [open, setOpen] = useState(false);
 
     useEffect(() => {
 
@@ -23,19 +27,28 @@ const FolderPicture = ({ timestamp }) => {
         };
     }, []);
 
+    const handleClick = (image) => {
+        setSelectedImage(image);
+        setOpen(true);
+    };
+
     return(<>
         <div>
             <label className="font-black font-bold text-xl">{timestamp}</label>
             <div className={"grid grid-cols-3 gap-4"}>
                 {pictureList.map((list) => (
-                    <div className={"flex items-center justify-center rounded-md overflow-hidden"}>
-                        <img
-                            src={list.preview} className={"w-full h-full object-cover"} />
-                    </div>
+                    <>
+                        <div className={"flex items-center justify-center rounded-md overflow-hidden"}>
+                            <img
+                                src={list.preview} className={"w-full h-full object-cover"}
+                                onClick={() => handleClick(list.image)}/>
+                        </div>
+                    </>
                 ))}
             </div>
-
         </div>
+        <DetailPictureModal isOpen={open} image={selectedImage}
+                            onClose={() => setOpen(false)}></DetailPictureModal>
     </>)
 };
 
