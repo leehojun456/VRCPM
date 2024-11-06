@@ -38,7 +38,7 @@ const FolderPicture = ({ timestamp }) => {
             <div className={"grid grid-cols-3 gap-4"}>
                 {pictureList.map((list) => (
                     <>
-                        <div className={"flex items-center justify-center rounded-md overflow-hidden"}>
+                        <div className={"flex items-center justify-center rounded-md overflow-hidden h-96"}>
                             <img
                                 src={list.preview} className={"w-full h-full object-cover"}
                                 onClick={() => handleClick(list.image)}/>
