@@ -22,3 +22,13 @@ contextBridge.exposeInMainWorld('PictureList', {
         return () => ipcRenderer.removeListener(channel, listener);
     },
 });
+
+    contextBridge.exposeInMainWorld('PictureProcessing', {
+        requestResize: (path) =>  ipcRenderer.send('PictureResize', path),
+        onReceiveResize: (path,callback) => {
+            const channel = `PictureResize-${path}`;
+            const listener = (event, path) => callback(path);
+            ipcRenderer.on(channel, listener);
+            return () => ipcRenderer.removeListener(channel, listener);
+        },
+});

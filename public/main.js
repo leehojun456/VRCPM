@@ -76,7 +76,6 @@ function sendFolderList(event) {
             const filePath = path.join(picturesPath, file);
             return fs.statSync(filePath).isDirectory();
         });
-
         // 폴더 리스트를 Renderer로 전송
         event.reply('folderList', folderList);
     });
@@ -90,44 +89,31 @@ ipcMain.on('folderList', (event) => {
 
 // 'pictureList' 요청을 받았을 때 폴더 리스트 전송
 ipcMain.on('pictureList',  (event, timestamp) => {
-
-    console.log(timestamp)
-
-    const picturesPath = app.getPath('pictures') + "/VRChat/" + timestamp;
+    console.log(timestamp);
+    const picturesPath = path.join(app.getPath('pictures'), "VRChat", timestamp);
     fs.readdir(picturesPath, async (err, files) => {
         if (err) {
-            console.error('Error reading directory:', err);
-            event.reply('folderList', { error: 'Failed to read directory' });
+            console.error('디렉토리 읽기 오류:', err);
+            event.reply('folderList', { error: '디렉토리 읽기 실패' });
             return;
         }
 
-        // 디렉토리 내 파일 중 이미지 파일만 가져오기 (예: .jpg, .png 확장자)
+        // 이미지 파일만 필터링 (예: .jpg, .png 확장자)
         const imageFiles = files
-            .filter(file => /\.(jpg|jpeg|png|gif)$/i.test(file)).map(file => path.join(picturesPath, file));
+            .filter(file => /\.(jpg|jpeg|png|gif)$/i.test(file))
+            .map(file => path.join(picturesPath, file));
 
-
-
-        for (const file of imageFiles) {
-            try {
-                // Read and process the image with Sharp
-                const buffer = await sharp(file)
-                    .resize({ width: 800 }) // Resize to width of 800px, adjust as needed
-                    .jpeg({ quality: 80 }) // Convert to JPEG and set quality
-                    .toBuffer();
-
-                // Convert the buffer to Base64
-                 const base64Image = buffer.toString('base64');
-                // Store Base64 data in the array
-                //pictureList.push(`data:image/jpeg;base64,${base64Image}`);
-
-                await event.reply(`pictureList-${timestamp}`, {
-                    preview:`data:image/jpeg;base64,${base64Image}`,
-                    image: file,
-                });
-
-            } catch (imageErr) {
-                console.error('Error processing image:', imageErr);
-            }
-        }
+        event.reply(`pictureList-${timestamp}`, imageFiles);
     });
+});
+
+ipcMain.on('PictureResize', (event, path) => {
+    console.log(path)
+    sharp(path)
+        .resize(200, 200) // 200x200 사이즈로 리사이즈
+        .toBuffer().then((data)=>{
+            const base64Image = data.toString('base64');
+            console.log("리사이즈 완료")
+            event.reply(`PictureResize-${path}`, `data:image/jpeg;base64,${base64Image}`);
+    })
 });
