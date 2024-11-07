@@ -24,7 +24,7 @@ const PicturePreview = ({path}) => {
     }, []);
 
     return(<>
-        <div className={"flex items-center justify-center rounded-md overflow-hidden h-96"}>
+        <div className={"flex items-center justify-center rounded-md overflow-hidden max-h-96 hover:border-2 border-b-blue-500"}>
             <img
                 src={previewImage} className={"w-full h-full object-cover"}
                 onClick={() => handleClick(path)}/>

@@ -6,7 +6,7 @@ const MainLayout = () => {
     return(
         <>
             <div className={"flex"}>
-                <div className={"flex flex-col h-dvh bg-gray-50 min-w-16 text-2xl p-4"}>
+                <div className={"flex flex-col h-dvh bg-gray-50 min-w-16 text-2xl p-4 -z-50"}>
                     <Link to={"/"} className={''}><FontAwesomeIcon icon={faList} /></Link>
                 </div>
                 <div className={"h-dvh w-full overflow-x-hidden flex p-2"}>
