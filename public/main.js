@@ -1,10 +1,10 @@
 import {BrowserWindow, app, ipcMain, protocol} from 'electron'
 import * as path from 'path'
 import * as isDev from 'electron-is-dev'
-import { Worker } from 'worker_threads';
 import { fileURLToPath } from 'url';
 import * as fs from "node:fs";
 import sharp from "sharp";
+import ExifReader from 'exifreader';
 // 현재 파일의 경로
 const __filename = fileURLToPath(import.meta.url);
 // 현재 파일의 디렉토리 경로
@@ -107,13 +107,17 @@ ipcMain.on('pictureList',  (event, timestamp) => {
     });
 });
 
+ipcMain.on('requestMetadata', (event, path) => {
+    const fileBuffer = fs.readFileSync(path);
+    const tags = ExifReader.load(fileBuffer).Description.description;
+    event.reply('responseMetadata', tags)
+});
+
 ipcMain.on('PictureResize', (event, path) => {
-    console.log(path)
     sharp(path)
         .resize(200, 200) // 200x200 사이즈로 리사이즈
         .toBuffer().then((data)=>{
-            const base64Image = data.toString('base64');
-            console.log("리사이즈 완료")
-            event.reply(`PictureResize-${path}`, `data:image/jpeg;base64,${base64Image}`);
+        const base64Image = data.toString('base64');
+        event.reply(`PictureResize-${path}`, `data:image/jpeg;base64,${base64Image}`);
     })
 });

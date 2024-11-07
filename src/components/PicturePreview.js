@@ -15,12 +15,9 @@ const PicturePreview = ({path}) => {
     useEffect(() => {
         window.PictureProcessing.requestResize(path);
 
-        const removeListener = window.PictureProcessing.onReceiveResize(path,(path)=>{
+        window.PictureProcessing.onReceiveResize(path,(path)=>{
             setPreviewImage(path)
         });
-        return () => {
-            removeListener(); // 클린업 함수 호출
-        };
     }, []);
 
     return(<>
@@ -29,7 +26,7 @@ const PicturePreview = ({path}) => {
                 src={previewImage} className={"w-full h-full object-cover"}
                 onClick={() => handleClick(path)}/>
         </div>
-        <DetailPictureModal isOpen={open} image={selectedImage}
+        <DetailPictureModal isOpen={open} path={selectedImage}
                             onClose={() => setOpen(false)}></DetailPictureModal>
 </>)
 }

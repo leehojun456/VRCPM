@@ -16,7 +16,7 @@ contextBridge.exposeInMainWorld('PictureList', {
     onReceiveList: (timestamp,callback) => {
         const channel = `pictureList-${timestamp}`;
         const listener = (event, list) => callback(list);
-        ipcRenderer.on(channel, listener);
+        ipcRenderer.once(channel, listener);
 
         // Return a function to remove the listener
         return () => ipcRenderer.removeListener(channel, listener);
@@ -25,10 +25,11 @@ contextBridge.exposeInMainWorld('PictureList', {
 
     contextBridge.exposeInMainWorld('PictureProcessing', {
         requestResize: (path) =>  ipcRenderer.send('PictureResize', path),
+        requestMetadata: (path) =>  ipcRenderer.send('requestMetadata', path),
         onReceiveResize: (path,callback) => {
             const channel = `PictureResize-${path}`;
             const listener = (event, path) => callback(path);
-            ipcRenderer.on(channel, listener);
-            return () => ipcRenderer.removeListener(channel, listener);
+            ipcRenderer.once(channel, listener);
         },
+        responseMetadata: (callback) => ipcRenderer.once('responseMetadata', (event, data) => callback(data)),
 });
