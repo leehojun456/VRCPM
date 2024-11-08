@@ -13,6 +13,7 @@ const PicturePreview = ({path}) => {
     };
 
     useEffect(() => {
+        setPreviewImage(path)
         window.PictureProcessing.requestResize(path);
 
         window.PictureProcessing.onReceiveResize(path,(path)=>{

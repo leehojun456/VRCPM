@@ -1,10 +1,18 @@
-import {BrowserWindow, app, ipcMain, protocol} from 'electron'
-import * as path from 'path'
-import * as isDev from 'electron-is-dev'
+import { BrowserWindow, app, ipcMain, protocol } from 'electron';
+import * as path from 'path';
+import * as isDev from 'electron-is-dev';
 import { fileURLToPath } from 'url';
-import * as fs from "node:fs";
-import sharp from "sharp";
+import * as fs from 'fs';
+import sharp from 'sharp';
 import ExifReader from 'exifreader';
+import axios from "axios";
+
+const headers =
+    {
+        maxRedirects: 0,
+    headers: { "User-Agent": "VRCPM/0.0.2 hppmm@naver.com"}
+}
+
 // 현재 파일의 경로
 const __filename = fileURLToPath(import.meta.url);
 // 현재 파일의 디렉토리 경로
@@ -17,6 +25,7 @@ function createWindow() {
         webPreferences: {
             nodeIntegration: false,
             contextIsolation: true,
+            webSecurity: false,
             preload: path.join(__dirname, 'preload.cjs')
         },
     });
@@ -107,17 +116,73 @@ ipcMain.on('pictureList',  (event, timestamp) => {
     });
 });
 
-ipcMain.on('requestMetadata', (event, path) => {
-    const fileBuffer = fs.readFileSync(path);
-    const tags = ExifReader.load(fileBuffer).Description.description;
-    event.reply('responseMetadata', tags)
-});
+ipcMain.on('requestMetadata', async (event, path) => {
 
+    // 모델 설정
+    let tags = {
+        "player": null,
+        "players": null,
+        "world": {
+            "id": null,
+            "url": null,
+            "thumb": null,
+            "title": null,
+            "authorName": null,
+            "description": null,
+        },
+    };
+
+    // 해당 주소의 파일을 읽어서 Exif 추출
+    const exifData = ExifReader.load(fs.readFileSync(path));
+
+    // description이 있는 경우 추가 정보 제공
+    if (exifData.Description?.description) {
+        const description = JSON.parse(exifData.Description.description);
+        tags.world.id = description.world.id;
+        tags.world.url = `https://vrchat.com/home/world/${description.world.id}`;
+        tags.world.title = description.world.name;
+
+        try {
+            // VRChat API에서 추가 정보 가져오기
+            const worldResponse = await axios.get(`https://api.vrchat.cloud/api/1/worlds/${description.world.id}`, headers);
+            tags.world.title = worldResponse.data.name;
+
+            // 썸네일 이미지 URL 가져오기 (리다이렉트 발생 시 처리)
+            try {
+                await axios.get(worldResponse.data.thumbnailImageUrl,  headers);
+            } catch (thumbError) {
+                if (thumbError.response && thumbError.response.status === 302) {
+                    // 리다이렉트 URL 처리
+                    tags.world.thumb = thumbError.response.headers.location;
+                }
+            }
+        } catch (worldError) {
+            console.error("World data fetch error:", worldError);
+        }
+    }
+    else
+    {
+        tags = null;
+    }
+
+    // 모든 비동기 작업이 완료된 후에 응답을 전송
+    console.log(tags);
+    event.reply('responseMetadata', tags);
+});
 ipcMain.on('PictureResize', (event, path) => {
-    sharp(path)
-        .resize(200, 200) // 200x200 사이즈로 리사이즈
-        .toBuffer().then((data)=>{
-        const base64Image = data.toString('base64');
-        event.reply(`PictureResize-${path}`, `data:image/jpeg;base64,${base64Image}`);
+
+    fs.stat(path, (err, stats) => {
+        if (stats.size > 8000000) {
+            sharp(path)
+                .resize(200, 200) // 200x200 사이즈로 리사이즈
+                .toBuffer().then((data)=>{
+                const base64Image = data.toString('base64');
+                event.reply(`PictureResize-${path}`, `data:image/jpeg;base64,${base64Image}`);
+            })
+        }
+        else
+        {
+            event.reply(`PictureResize-${path}`, `my-scheme-name:///${path}`);
+        }
     })
 });
