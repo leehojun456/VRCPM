@@ -1,4 +1,4 @@
-import { BrowserWindow, app, ipcMain, protocol } from 'electron';
+import { BrowserWindow, app, ipcMain, protocol, shell } from 'electron';
 import * as path from 'path';
 import * as isDev from 'electron-is-dev';
 import { fileURLToPath } from 'url';
@@ -6,6 +6,7 @@ import * as fs from 'fs';
 import sharp from 'sharp';
 import ExifReader from 'exifreader';
 import axios from "axios";
+
 
 const headers =
     {
@@ -89,6 +90,12 @@ function sendFolderList(event) {
         event.reply('folderList', folderList);
     });
 }
+
+// 'openRequest' 요청을 받았을 때 폴더 리스트 전송
+ipcMain.on('openRequest',  async(event,timestamp) => {
+    console.log("폴더 열기 요청을 받았습니다.")
+    await shell.openPath(path.join(app.getPath('pictures'), "VRChat", timestamp))
+});
 
 // 'folderList' 요청을 받았을 때 폴더 리스트 전송
 ipcMain.on('folderList', (event) => {

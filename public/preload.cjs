@@ -6,8 +6,9 @@ contextBridge.exposeInMainWorld('versions', {
     electron: () => process.versions.electron,
 });
 
-contextBridge.exposeInMainWorld('folderList', {
-    request: () => ipcRenderer.send('folderList'),
+contextBridge.exposeInMainWorld('folder', {
+    listRequest: () => ipcRenderer.send('folderList'),
+    openRequest: (timestamp) => ipcRenderer.send('openRequest',timestamp),
     onReceiveList: (callback) => ipcRenderer.on('folderList', (event, list) => callback(list)),
 });
 

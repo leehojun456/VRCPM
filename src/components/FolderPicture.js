@@ -1,7 +1,9 @@
 import React, {useEffect, useState} from 'react';
 import PicturePreview from "./PicturePreview.js";
+import {useParams} from "react-router-dom";
 
-const FolderPicture = ({ timestamp }) => {
+const FolderPicture = () => {
+    const { timestamp } = useParams();
     const [pictureList, setPictureList] = useState([])
 
     useEffect(() => {
